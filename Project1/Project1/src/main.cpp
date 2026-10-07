@@ -45,7 +45,7 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 const float mapMin = 0.0;
 const float mapMax = 150;
 
-const float testing = 0;
+// const float testing = 0;
 
 float voltsSensorVal = 0; // value use whne redign sensor voltage
 
