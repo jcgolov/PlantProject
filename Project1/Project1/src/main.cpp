@@ -47,6 +47,8 @@ const float mapMax = 150;
 
 float voltsSensorVal = 0; // value use whne redign sensor voltage
 
+const uint8_t SWITCH_2 = 32;      //SECOND PUSH BUTTON
+
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 OLED OLED_Display(&OLED_PIN);
 PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &lowPercentThreshold, &highPercentThreshold);
