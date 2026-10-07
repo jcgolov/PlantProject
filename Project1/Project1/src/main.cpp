@@ -1,6 +1,5 @@
 /*
 FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
-
 */
 
 #include <Arduino.h>
@@ -11,6 +10,8 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 #include "MySensor.h"
 #include "OLED.h"
 #include "PumpControl.h"
+
+
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
@@ -43,6 +44,8 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 // used to map the values for percents
 const float mapMin = 0.0;
 const float mapMax = 150;
+
+const float testing = 0;
 
 float voltsSensorVal = 0; // value use whne redign sensor voltage
 
