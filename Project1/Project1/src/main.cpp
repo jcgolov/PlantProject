@@ -2,6 +2,8 @@
 FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 */
 
+#include <HTTPClient.h>
+
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
 #include "WiFi.h"      //to turn OFF wifi module
@@ -30,6 +32,8 @@ RTC_DATA_ATTR bool motorON = false;              // control the pump motor
 RTC_DATA_ATTR bool OLEDPin_state_changed = true; // if the switch is pressed to turn display ON and OFF, this is set to True
 RTC_DATA_ATTR int counter = 0;                   // counter on how many tiems the chip went to sleep
 RTC_DATA_ATTR bool pumpOn = false;               // togle for ON OFF for pump
+RTC_DATA_ATTR float voltsSensorVal = 0; // value use whne redign sensor voltage
+
 
 const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (MySensor)
 const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MySensor)
@@ -43,11 +47,69 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
-float voltsSensorVal = 0; // value use whne redign sensor voltage
 
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 OLED OLED_Display(&OLED_PIN);
 PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &lowPercentThreshold, &highPercentThreshold);
+
+
+// Replace with your SSID and Password
+const char *ssid = "BT-9TAJSN";
+const char *password = "NEtLgxRuhDGh6V";
+const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
+unsigned long timeRead = 0;
+
+void initWifi()
+{
+  Serial.print("Connecting to: ");
+  Serial.print(ssid);
+
+  WiFi.begin(ssid, password);
+
+  int timeout = 10 * 4; // 10 seconds
+  while (WiFi.status() != WL_CONNECTED && (timeout-- > 0))
+  {
+    delay(250);
+    Serial.print(".");
+  }
+  Serial.println("");
+
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.println("Failed to connect");
+  }
+
+  Serial.print("WiFi connected with IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void sendToGoogleSheet()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    HTTPClient http;
+    http.begin(serverName);
+    http.addHeader("Content-Type", "application/json");
+
+    String jsonData = "{\"volt\":\"" + String(voltsSensorVal) + "\", \"moist\":\"" + String(percent) + "\", \"counter\":\"" + String(counter) + "\", \"pumpOn\":\"" + String(pumpOn) + "\"}";
+
+    int httpResponseCode = http.POST(jsonData);
+
+    if (httpResponseCode > 0)
+    {
+      String response = http.getString();
+      // Serial.println(httpResponseCode);
+      // Serial.println(response);
+    }
+    else
+    {
+      Serial.print("Wrong request POST: ");
+      Serial.println(httpResponseCode);
+    }
+
+    http.end();
+  }
+}
 
 void settingDeepSleep()
 {
@@ -104,11 +166,13 @@ void setup()
 {
   printf(">>> Setup-> Counter: %d\n", counter);
 
+   initWifi();
+
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
   pinMode(SENSOR_PIN, OUTPUT);
   digitalWrite(SENSOR_PIN, LOW);
   analogSetAttenuation(ADC_11db); // full 0–3.3 V range
-  WiFi.mode(WIFI_OFF);
+  // WiFi.mode(WIFI_OFF);
 
   checkWakeupReason();
 
@@ -135,6 +199,7 @@ void setup()
       OLED_Display.initialiseOLED();
       OLED_Display.setStartDisplay();
       OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
+      sendToGoogleSheet();
     }
     state = OLED_Display.set_RTC_OLED(displayON);
     counter++;
@@ -156,6 +221,7 @@ void loop()
   if (state == HIGH && !OLEDPin_state_changed)
   {
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
+    sendToGoogleSheet();
   }
   if (!pumpOn)
   {
