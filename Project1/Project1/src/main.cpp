@@ -11,8 +11,6 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 #include "OLED.h"
 #include "PumpControl.h"
 
-
-
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
 const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
@@ -37,17 +35,15 @@ const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (M
 const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MySensor)
 
 // pump control values passed as pointers to PumpControl
-const uint8_t lowPercentThreshold = 12;  // if the percent lower than that, pump is turned ON
-const uint8_t highPercentThreshold = 20; // When motor pump is ON, it will stop whne percent >= this value
+const uint8_t lowPercentThreshold = 15;  // if the percent lower than that, pump is turned ON
+const uint8_t highPercentThreshold = 60; // When motor pump is ON, it will stop whne percent >= this value
 const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump motor
 
-// used to map the values for percents
-const float mapMin = 0.0;
-const float mapMax = 150;
+// // used to map the values for percents
+const float dryValue = 2.58; // volts
+const float wetValue = 0.94; // volts
 
 float voltsSensorVal = 0; // value use whne redign sensor voltage
-
-const uint8_t SWITCH_2 = 32;      //SECOND PUSH BUTTON
 
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 OLED OLED_Display(&OLED_PIN);
@@ -88,28 +84,20 @@ void checkWakeupReason()
 
 void ReadSensor_SetPump()
 {
-
   printf("--> Setting Sensor HIGH <-- \n");
-
   mySensor.setControlPin(HIGH);
   mySensor.readPinVoltage(&voltsSensorVal, false);
-
   printf("--> Setting Sensor LOW <-- \n");
   mySensor.setControlPin(LOW);
-
-  // Using Power trendline in Excel
-  float percent1 = 82.691 * pow(voltsSensorVal, -2.825);
-  percent = Utils::map_Float(&percent1, &mapMin, &mapMax, 0.0, 100.0);
-
+  float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
+  percent = (uint8_t)percent1;
   printf("percent1: %.3f percent:  %d voltsSensorVal: %.3f\n", percent1, percent, voltsSensorVal);
-
   pumpControl.controlPump(&percent);
 
 #ifdef PUMPCONTROL_OFF
   pumpOn = false;
   printf("********* Pump turned off for testing ****************\n");
 #endif
-
 }
 
 void setup()
@@ -176,3 +164,31 @@ void loop()
     esp_deep_sleep_start();
   }
 }
+
+/*
+function doPost(e) {
+var sheet =
+SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+var data = JSON.parse(e.postData.contents);
+sheet.appendRow([new Date(), data.volt, data.moist, data.count, data.pumpON]);
+}
+
+How to connect your ESP32 to EXCEL on Google Drive and monitor SENSORS in real time
+https://www.youtube.com/watch?v=ciBs0VemqqQ
+
+https://github.com/Becircuit/excel_esp32
+
+
+*/
+
+
+/*
+Deployment successfully updated.
+Version 1 on 9 Oct 2026, 13:16
+Deployment ID
+AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH
+Web app
+URL
+https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec
+
+*/
