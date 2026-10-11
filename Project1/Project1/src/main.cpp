@@ -3,13 +3,13 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 */
 
 #include <HTTPClient.h>
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include "WiFi.h"     
 
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
-#include "WiFi.h"      //to turn OFF wifi module
+// #include "WiFi.h"      
 
 #include "Utils.h"
 #include "MySensor.h"
@@ -50,6 +50,8 @@ const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
 
+
+
 /*
 Whne the wifi is on hte display must be off as 
 there is not enough space for the entire code
@@ -64,6 +66,11 @@ const char *ssid = "BT-9TAJSN";
 const char *password = "NEtLgxRuhDGh6V";
 const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
 unsigned long timeRead = 0;
+
+
+#include "Wifi_Google.h"
+Wifi_Google wifi_Google(ssid, password,serverName);
+
 #endif
 
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
@@ -75,58 +82,63 @@ PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &low
 #ifdef WIFI_OUTPUT
 void initWifi()
 {
-  Serial.print("Connecting to: ");
-  Serial.print(ssid);
 
-  WiFi.begin(ssid, password);
+  wifi_Google.initWifi();
 
-  int timeout = 10 * 4; // 10 seconds
-  while (WiFi.status() != WL_CONNECTED && (timeout-- > 0))
-  {
-    delay(250);
-    printf(".");
-  }
-  // Serial.println("");
+  // Serial.print("Connecting to: ");
+  // Serial.print(ssid);
 
-  printf("  ");
+  // WiFi.begin(ssid, password);
 
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    printf(("Failed to connect\n"));
-  }
+  // int timeout = 10 * 4; // 10 seconds
+  // while (WiFi.status() != WL_CONNECTED && (timeout-- > 0))
+  // {
+  //   delay(250);
+  //   printf(".");
+  // }
+  // // Serial.println("");
 
-  printf("WiFi connected with IP address: Local IP: %s\n", WiFi.localIP());
+  // printf("  ");
+
+  // if (WiFi.status() != WL_CONNECTED)
+  // {
+  //   printf(("Failed to connect\n"));
+  // }
+
+  // printf("WiFi connected with IP address: Local IP: %s\n", WiFi.localIP());
 }
 
 void sendToGoogleSheet()
 {
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    HTTPClient http;
-    http.begin(serverName);
-    http.addHeader("Content-Type", "application/json");
+  wifi_Google.sendToGoogleSheet();
 
-    String jsonData = "{\"volt\":\"" + String(voltsSensorVal, 3) + "\", \"moist\":\"" + String(percent) + "\", \"count\":\"" + String(counter) + "\", \"pumpON\":\"" + String(pumpOn) + "\"}";
+  // if (WiFi.status() == WL_CONNECTED)
+  // {
+  //   HTTPClient http;
+  //   http.begin(serverName);
+  //   http.addHeader("Content-Type", "application/json");
 
-    printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", voltsSensorVal, percent, counter, pumpOn);
+  //   String jsonData = "{\"volt\":\"" + String(voltsSensorVal, 3) + "\", \"moist\":\"" + String(percent) + "\", \"count\":\"" + String(counter) + "\", \"pumpON\":\"" + String(pumpOn) + "\"}";
 
-    int httpResponseCode = http.POST(jsonData);
+  //   printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", voltsSensorVal, percent, counter, pumpOn);
 
-    if (httpResponseCode > 0)
-    {
-      String response = http.getString();
+  //   int httpResponseCode = http.POST(jsonData);
 
-      printf("Request POST Sent \n");
-    }
-    else
-    {
-      printf("Wrong request POST->  %d", httpResponseCode);
-    }
+  //   if (httpResponseCode > 0)
+  //   {
+  //     String response = http.getString();
 
-    http.end();
-  }
+  //     printf("Request POST Sent \n");
+  //   }
+  //   else
+  //   {
+  //     printf("Wrong request POST->  %d", httpResponseCode);
+  //   }
 
-  delay(1000);
+  //   http.end();
+  // }
+
+  // delay(1000);
 }
 
 #endif
@@ -187,6 +199,9 @@ void setup()
   printf(">>> Setup-> Counter: %d\n", counter);
 
 #ifdef WIFI_OUTPUT
+
+wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
+
   initWifi();
 #endif
 
