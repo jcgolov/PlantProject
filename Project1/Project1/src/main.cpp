@@ -27,7 +27,7 @@ When the wifi is on the display must be off as
 there is not enough space for the entire code
 for both display and wifi
 */
-// #define WIFI_OUTPUT
+#define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
@@ -36,7 +36,7 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
 #define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
 
-// #define MINUTES
+#define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -90,8 +90,6 @@ void settingDeepSleep()
   esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKEUP_PIN, 1);
 }
 
-
-
 void checkWakeupReason()
 {
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -99,22 +97,34 @@ void checkWakeupReason()
   switch (wakeup_reason)
   {
   case ESP_SLEEP_WAKEUP_TIMER:
+#ifdef DEBUG_OUTPUT
     printf("--> Wakeup caused by timer\n");
+#endif
+
+#ifndef WIFI_OUTPUT
     OLEDPin_state_changed = false;
+#endif
     break;
   case ESP_SLEEP_WAKEUP_EXT0:
+#ifdef DEBUG_OUTPUT
     printf("--> Wakeup caused by external signal using RTC_IO\n");
+#endif
+#ifndef WIFI_OUTPUT
     displayON = !displayON;
     OLEDPin_state_changed = true;
+#endif
     break;
 
   default:
+#ifdef DEBUG_OUTPUT
     printf("--> Wakeup was not caused by deep sleep: %d\n", wakeup_reason);
+#endif
+#ifndef WIFI_OUTPUT
     OLEDPin_state_changed = true;
+#endif
     break;
   }
 }
-
 
 void ReadSensor_SetPump()
 {
@@ -165,9 +175,7 @@ void setup()
   digitalWrite(SENSOR_PIN, LOW);
   analogSetAttenuation(ADC_11db); // full 0–3.3 V range
 
-
   checkWakeupReason();
-
 
   ReadSensor_SetPump();
 
@@ -186,7 +194,6 @@ void setup()
       OLED_Display.initialiseOLED();
       OLED_Display.setStartDisplay();
       OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
-      
     }
   }
   else
@@ -199,12 +206,12 @@ void setup()
     }
   }
 
-   int state = OLED_Display.set_RTC_OLED(displayON);
+  int state = OLED_Display.set_RTC_OLED(displayON);
 #endif
 
   if (!pumpOn)
   {
-     counter++;
+    counter++;
     // #ifdef DEBUG_OUTPUT
     printf("Going to sleep SETUP \n\n");
     // #endif
