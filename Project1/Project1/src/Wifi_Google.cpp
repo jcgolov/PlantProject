@@ -63,7 +63,7 @@ void Wifi_Google::sendToGoogleSheet()
 
         String jsonData = "{\"volt\":\"" + String(*voltsSensorVal, 3) + "\", \"moist\":\"" + String(*percent) + "\", \"count\":\"" + String(*counter) + "\", \"pumpON\":\"" + String(*pumpOn) + "\"}";
 
-        printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", voltsSensorVal, percent, counter, pumpOn);
+        printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", *voltsSensorVal, *percent, *counter, *pumpOn);
 
         int httpResponseCode = http.POST(jsonData);
 

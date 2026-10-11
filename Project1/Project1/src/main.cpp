@@ -5,11 +5,11 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 #include <HTTPClient.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include "WiFi.h"     
+#include "WiFi.h"
 
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
-// #include "WiFi.h"      
+// #include "WiFi.h"
 
 #include "Utils.h"
 #include "MySensor.h"
@@ -49,11 +49,8 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
-
-
-
 /*
-Whne the wifi is on hte display must be off as 
+Whne the wifi is on hte display must be off as
 there is not enough space for the entire code
 for both display and wifi
 */
@@ -67,9 +64,8 @@ const char *password = "NEtLgxRuhDGh6V";
 const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
 unsigned long timeRead = 0;
 
-
 #include "Wifi_Google.h"
-Wifi_Google wifi_Google(ssid, password,serverName);
+Wifi_Google wifi_Google(ssid, password, serverName);
 
 #endif
 
@@ -78,70 +74,6 @@ MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 OLED OLED_Display(&OLED_PIN);
 #endif
 PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &lowPercentThreshold, &highPercentThreshold);
-
-#ifdef WIFI_OUTPUT
-void initWifi()
-{
-
-  wifi_Google.initWifi();
-
-  // Serial.print("Connecting to: ");
-  // Serial.print(ssid);
-
-  // WiFi.begin(ssid, password);
-
-  // int timeout = 10 * 4; // 10 seconds
-  // while (WiFi.status() != WL_CONNECTED && (timeout-- > 0))
-  // {
-  //   delay(250);
-  //   printf(".");
-  // }
-  // // Serial.println("");
-
-  // printf("  ");
-
-  // if (WiFi.status() != WL_CONNECTED)
-  // {
-  //   printf(("Failed to connect\n"));
-  // }
-
-  // printf("WiFi connected with IP address: Local IP: %s\n", WiFi.localIP());
-}
-
-void sendToGoogleSheet()
-{
-  wifi_Google.sendToGoogleSheet();
-
-  // if (WiFi.status() == WL_CONNECTED)
-  // {
-  //   HTTPClient http;
-  //   http.begin(serverName);
-  //   http.addHeader("Content-Type", "application/json");
-
-  //   String jsonData = "{\"volt\":\"" + String(voltsSensorVal, 3) + "\", \"moist\":\"" + String(percent) + "\", \"count\":\"" + String(counter) + "\", \"pumpON\":\"" + String(pumpOn) + "\"}";
-
-  //   printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", voltsSensorVal, percent, counter, pumpOn);
-
-  //   int httpResponseCode = http.POST(jsonData);
-
-  //   if (httpResponseCode > 0)
-  //   {
-  //     String response = http.getString();
-
-  //     printf("Request POST Sent \n");
-  //   }
-  //   else
-  //   {
-  //     printf("Wrong request POST->  %d", httpResponseCode);
-  //   }
-
-  //   http.end();
-  // }
-
-  // delay(1000);
-}
-
-#endif
 
 void settingDeepSleep()
 {
@@ -199,10 +131,8 @@ void setup()
   printf(">>> Setup-> Counter: %d\n", counter);
 
 #ifdef WIFI_OUTPUT
-
-wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
-
-  initWifi();
+  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
+  wifi_Google.initWifi();
 #endif
 
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
@@ -254,7 +184,7 @@ wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
 #else
   printf("line: 240 \n");
   ReadSensor_SetPump();
-  sendToGoogleSheet();
+  wifi_Google.sendToGoogleSheet();
 #endif
 
   if (!pumpOn && !OLEDPin_state_changed)
@@ -280,7 +210,7 @@ void loop()
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
 #else
     printf("line: 266 \n");
-    sendToGoogleSheet(); // not sure we shoud do that whne pump is one
+    wifi_Google.sendToGoogleSheet(); 
 #endif
   }
   if (!pumpOn)
