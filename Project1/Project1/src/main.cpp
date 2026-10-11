@@ -118,22 +118,21 @@ void ReadSensor_SetPump()
   printf("--> Setting Sensor LOW <-- \n");
   mySensor.setControlPin(LOW);
 
-  float percent1 = 0;
+  /*
+    as the voltsSensorVal fluctuates so does the moisture percent
+    here we ensure that teh difference between the last reading and the new one
+    is significant enough to recompute everything
+    This alos ensure that we do not waste process time etc.
+    byt only doing things whne really needed
+  */
 
   if (abs(voltsSensorVal - last_voltsSensorVal) > 0.1)
   {
-    printf("Difference %.3f\n", abs(voltsSensorVal - last_voltsSensorVal));
-
-    percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
-
+    float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
-
-    // percent = (uint8_t)percent1;
-    
-    // pumpControl.controlPump(&percent);
   }
 
-  printf("percent1: %.3f percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent1, percent, voltsSensorVal, last_voltsSensorVal);
+  printf("percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent, voltsSensorVal, last_voltsSensorVal);
 
   last_voltsSensorVal = voltsSensorVal;
 
