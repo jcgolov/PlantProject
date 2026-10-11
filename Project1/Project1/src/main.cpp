@@ -6,15 +6,33 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "WiFi.h"
-
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
-// #include "WiFi.h"
+
 
 #include "Utils.h"
 #include "MySensor.h"
 #include "OLED.h"
 #include "PumpControl.h"
+#include "Wifi_Google.h"
+
+/*
+  This overrides the pump On and OFF to set it to OFF
+  all the time. This is for testing the code
+*/
+// #define PUMPCONTROL_OFF
+
+/*
+  This stops the debug printf statement when not defiend
+*/
+// #define DEBUG_OUTPUT
+/*
+
+When the wifi is on the display must be off as
+there is not enough space for the entire code
+for both display and wifi
+*/
+#define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
@@ -23,8 +41,6 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
 #define TIME_TO_SLEEP 10          // Time ESP32 will go to sleep
-
-// #define PUMPCONTROL_OFF
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -36,7 +52,6 @@ RTC_DATA_ATTR bool OLEDPin_state_changed = true; // if the switch is pressed to 
 RTC_DATA_ATTR int counter = 0;                   // counter on how many tiems the chip went to sleep
 RTC_DATA_ATTR bool pumpOn = false;               // togle for ON OFF for pump
 RTC_DATA_ATTR float voltsSensorVal = 0;          // value use whne redign sensor voltage
-
 RTC_DATA_ATTR float last_voltsSensorVal = 0;
 
 const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (MySensor)
@@ -51,13 +66,6 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
-/*
-Whne the wifi is on hte display must be off as
-there is not enough space for the entire code
-for both display and wifi
-*/
-
-#define WIFI_OUTPUT
 
 #ifdef WIFI_OUTPUT
 // Replace with your SSID and Password
@@ -66,7 +74,7 @@ const char *password = "NEtLgxRuhDGh6V";
 const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
 unsigned long timeRead = 0;
 
-#include "Wifi_Google.h"
+
 Wifi_Google wifi_Google(ssid, password, serverName);
 
 #endif
@@ -86,6 +94,8 @@ void settingDeepSleep()
   //  esp_err_t esp_sleep_enable_ext0_wakeup(gpio_num_t gpio_num, int level);
   esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKEUP_PIN, 1);
 }
+
+#ifdef DEBUG_OUTPUT
 
 void checkWakeupReason()
 {
@@ -109,13 +119,19 @@ void checkWakeupReason()
     break;
   }
 }
+#endif
 
 void ReadSensor_SetPump()
 {
+
+#ifdef DEBUG_OUTPUT
   printf("--> Setting Sensor HIGH <-- \n");
+#endif
   mySensor.setControlPin(HIGH);
   mySensor.readPinVoltage(&voltsSensorVal, true);
+#ifdef DEBUG_OUTPUT
   printf("--> Setting Sensor LOW <-- \n");
+#endif
   mySensor.setControlPin(LOW);
 
   /*
@@ -131,8 +147,9 @@ void ReadSensor_SetPump()
     float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
   }
-
+#ifdef DEBUG_OUTPUT
   printf("percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent, voltsSensorVal, last_voltsSensorVal);
+#endif
 
   last_voltsSensorVal = voltsSensorVal;
 
@@ -144,14 +161,18 @@ void ReadSensor_SetPump()
 
 void setup()
 {
+#ifdef DEBUG_OUTPUT
   printf(">>> Setup-> Counter: %d\n", counter);
+#endif
 
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
   pinMode(SENSOR_PIN, OUTPUT);
   digitalWrite(SENSOR_PIN, LOW);
   analogSetAttenuation(ADC_11db); // full 0–3.3 V range
 
+#ifdef DEBUG_OUTPUT
   checkWakeupReason();
+#endif
 
   ReadSensor_SetPump();
 
@@ -186,7 +207,9 @@ void setup()
   if (!pumpOn)
   {
     counter++;
+#ifdef DEBUG_OUTPUT
     printf("Going to sleep SETUP \n\n");
+#endif
     settingDeepSleep();
     esp_deep_sleep_start();
   }
@@ -207,7 +230,9 @@ void loop()
 
   if (!pumpOn)
   {
+#ifdef DEBUG_OUTPUT
     printf("Going to sleep LOOP \n\n");
+#endif
     settingDeepSleep();
     esp_deep_sleep_start();
   }
