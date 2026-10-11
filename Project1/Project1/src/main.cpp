@@ -41,8 +41,8 @@ const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (M
 const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MySensor)
 
 // pump control values passed as pointers to PumpControl
-const uint8_t lowPercentThreshold = 15;  // if the percent lower than that, pump is turned ON
-const uint8_t highPercentThreshold = 60; // When motor pump is ON, it will stop whne percent >= this value
+const uint8_t lowPercentThreshold = 30;  // if the percent lower than that, pump is turned ON
+const uint8_t highPercentThreshold = 40; // When motor pump is ON, it will stop whne percent >= this value
 const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump motor
 
 // // used to map the values for percents
@@ -55,7 +55,7 @@ there is not enough space for the entire code
 for both display and wifi
 */
 
-// #define WIFI_OUTPUT
+#define WIFI_OUTPUT
 
 #ifdef WIFI_OUTPUT
 // Replace with your SSID and Password
@@ -176,93 +176,19 @@ void setup()
   }
 }
 
-/*
-void setup()
-{
-  printf(">>> Setup-> Counter: %d\n", counter);
-
-  pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
-  pinMode(SENSOR_PIN, OUTPUT);
-  digitalWrite(SENSOR_PIN, LOW);
-  analogSetAttenuation(ADC_11db); // full 0–3.3 V range
-
-  checkWakeupReason();
-
-#ifdef WIFI_OUTPUT
-  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
-  wifi_Google.initWifi();
-#else
-  WiFi.mode(WIFI_OFF);
-
-#endif
-
-  if (!OLEDPin_state_changed)
-  {
-    int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
-
-#ifndef WIFI_OUTPUT
-    if (state == HIGH)
-      OLED_Display.initialiseOLED();
-#endif
-
-#ifndef WIFI_OUTPUT
-    if (state == HIGH)
-    {
-      OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
-      // counter++;
-      delay(1000);
-    }
-#endif
-  }
-
-#ifndef WIFI_OUTPUT
-
-  if (OLEDPin_state_changed)
-  {
-    ReadSensor_SetPump();
-
-    int state = OLED_Display.setOLED_PIN_GPIO(HIGH);
-    // even if state HIGH, we do not want to diaply anything if displayON = False
-    if (state == HIGH && displayON)
-    {
-      OLED_Display.initialiseOLED();
-      OLED_Display.setStartDisplay();
-      OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
-    }
-    state = OLED_Display.set_RTC_OLED(displayON);
-  }
-#else
-  printf("line: 240 \n");
-  ReadSensor_SetPump();
-  wifi_Google.sendToGoogleSheet();
-#endif
-
-  if (!pumpOn && !OLEDPin_state_changed)
-  {
-    counter++;
-#ifndef WIFI_OUTPUT
-    int state = OLED_Display.set_RTC_OLED(displayON);
-#endif
-    printf("Going to sleep SETUP \n\n");
-    settingDeepSleep();
-    esp_deep_sleep_start();
-  }
-}
-*/
 void loop()
 {
   printf(">>> Running Loop \n");
   ReadSensor_SetPump();
-  int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
-  if (state == HIGH && !OLEDPin_state_changed)
-  {
+
 #ifndef WIFI_OUTPUT
+  int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
+  if (state == HIGH && displayON)
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
 #else
-    printf("line: 266 \n");
-    wifi_Google.sendToGoogleSheet();
+  // wifi_Google.sendToGoogleSheet();
 #endif
-  }
+
   if (!pumpOn)
   {
     printf("Going to sleep LOOP \n\n");
