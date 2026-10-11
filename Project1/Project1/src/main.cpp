@@ -9,7 +9,6 @@ FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
 
-
 #include "Utils.h"
 #include "MySensor.h"
 #include "OLED.h"
@@ -32,7 +31,7 @@ When the wifi is on the display must be off as
 there is not enough space for the entire code
 for both display and wifi
 */
-#define WIFI_OUTPUT
+// #define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
@@ -40,7 +39,9 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 10          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
+
+#define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -66,14 +67,12 @@ const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump moto
 const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
-
 #ifdef WIFI_OUTPUT
 // Replace with your SSID and Password
 const char *ssid = "BT-9TAJSN";
 const char *password = "NEtLgxRuhDGh6V";
 const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
 unsigned long timeRead = 0;
-
 
 Wifi_Google wifi_Google(ssid, password, serverName);
 
@@ -87,8 +86,11 @@ PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &low
 
 void settingDeepSleep()
 {
-  // esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * 60 * uS_TO_S_FACTOR); // minutes
+#ifdef MINUTES
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * 60 * uS_TO_S_FACTOR); // minutes
+#else
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); // seconds
+#endif
   //  Enable External Wake Up (ext0: single pin)
   //  1 = High, 0 = Low
   //  esp_err_t esp_sleep_enable_ext0_wakeup(gpio_num_t gpio_num, int level);
