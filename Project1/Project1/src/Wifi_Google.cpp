@@ -20,31 +20,27 @@ void Wifi_Google::setVariablesPrt(float *voltsSensorVal, uint8_t *percent, int *
 
 void Wifi_Google::initWifi()
 {
-
     if (ssid == nullptr || password == nullptr)
     {
         printf("SSID or Password is null. Cannot connect to WiFi.\n");
         return;
     }
-
     WiFi.begin(ssid, password);
+    int status = WiFi.waitForConnectResult(10000);
 
-    int timeout = 10 * 4; // 10 seconds
-    while (WiFi.status() != WL_CONNECTED && (timeout-- > 0))
+#ifdef DEBUG_WIFI_GOOGLE
+
+    if (status == WL_CONNECTED)
     {
-        delay(250);
-        printf(".");
+        Serial.println("Connected!");
     }
-    // Serial.println("");
-
-    printf("  ");
-
-    if (WiFi.status() != WL_CONNECTED)
+    else
     {
-        printf(("Failed to connect\n"));
+        Serial.print("Failed to connect. Status: ");
+        Serial.println(status);
     }
-
-    printf("WiFi connected with IP address: Local IP: %s\n", WiFi.localIP());
+    printf("WiFi connected with IP address: Local IP: %s on %s\n", WiFi.localIP().toString(), ssid);
+#endif
 }
 
 void Wifi_Google::sendToGoogleSheet()
@@ -62,10 +58,12 @@ void Wifi_Google::sendToGoogleSheet()
         http.addHeader("Content-Type", "application/json");
 
         String jsonData = "{\"volt\":\"" + String(*voltsSensorVal, 3) + "\", \"moist\":\"" + String(*percent) + "\", \"count\":\"" + String(*counter) + "\", \"pumpON\":\"" + String(*pumpOn) + "\"}";
+        int httpResponseCode = http.POST(jsonData);
+        http.end();
+
+#ifdef DEBUG_WIFI_GOOGLE
 
         printf("voltsSensorVal: %.3f percent:  %d counter: %d pumpOn %d \n", *voltsSensorVal, *percent, *counter, *pumpOn);
-
-        int httpResponseCode = http.POST(jsonData);
 
         if (httpResponseCode > 0)
         {
@@ -77,9 +75,6 @@ void Wifi_Google::sendToGoogleSheet()
         {
             printf("Wrong request POST->  %d", httpResponseCode);
         }
-
-        http.end();
+#endif
     }
-
-    delay(1000);
 }

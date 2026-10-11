@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include "WiFi.h"
 
+// #define DEBUG_WIFI_GOOGLE
+
 class Wifi_Google
 {
 
