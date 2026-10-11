@@ -1,7 +1,3 @@
-/*
-FULL COMMENTED CODE IN NOTES: WORKIGN WELL PAGES
-*/
-
 #include <HTTPClient.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -34,12 +30,11 @@ for both display and wifi
 #define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
-const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
 const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 1          // Time ESP32 will go to sleep
 
 #define MINUTES
 
@@ -47,9 +42,7 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
   all variables declared as RTC_DATA_ATTR are restored after waking up.
 */
 RTC_DATA_ATTR uint8_t percent = 0;
-RTC_DATA_ATTR bool displayON = true;             // control the display ON and OFF
 RTC_DATA_ATTR bool motorON = false;              // control the pump motor
-RTC_DATA_ATTR bool OLEDPin_state_changed = true; // if the switch is pressed to turn display ON and OFF, this is set to True
 RTC_DATA_ATTR int counter = 0;                   // counter on how many tiems the chip went to sleep
 RTC_DATA_ATTR bool pumpOn = false;               // togle for ON OFF for pump
 RTC_DATA_ATTR float voltsSensorVal = 0;          // value use whne redign sensor voltage
@@ -62,26 +55,27 @@ const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MyS
 const uint8_t lowPercentThreshold = 30;  // if the percent lower than that, pump is turned ON
 const uint8_t highPercentThreshold = 40; // When motor pump is ON, it will stop whne percent >= this value
 const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump motor
-
 // // used to map the values for percents
 const float dryValue = 2.58; // volts
 const float wetValue = 0.94; // volts
 
 #ifdef WIFI_OUTPUT
-// Replace with your SSID and Password
 const char *ssid = "BT-9TAJSN";
 const char *password = "NEtLgxRuhDGh6V";
 const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
 unsigned long timeRead = 0;
-
 Wifi_Google wifi_Google(ssid, password, serverName);
-
 #endif
 
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 #ifndef WIFI_OUTPUT
+const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
+RTC_DATA_ATTR bool displayON = true;             // control the display ON and OFF
+RTC_DATA_ATTR bool OLEDPin_state_changed = true; // if the switch is pressed to turn display ON and OFF, this is set to True
 OLED OLED_Display(&OLED_PIN);
 #endif
+
+
 PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &lowPercentThreshold, &highPercentThreshold);
 
 void settingDeepSleep()
@@ -130,7 +124,7 @@ void ReadSensor_SetPump()
   printf("--> Setting Sensor HIGH <-- \n");
 #endif
   mySensor.setControlPin(HIGH);
-  mySensor.readPinVoltage(&voltsSensorVal, true);
+  mySensor.readPinVoltage(&voltsSensorVal, false);
 #ifdef DEBUG_OUTPUT
   printf("--> Setting Sensor LOW <-- \n");
 #endif
@@ -182,6 +176,7 @@ void setup()
   wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
   wifi_Google.initWifi();
   wifi_Google.sendToGoogleSheet();
+  digitalWrite(ADC_PIN, LOW);
 #else
   WiFi.mode(WIFI_OFF);
   if (OLEDPin_state_changed)
