@@ -20,7 +20,7 @@
 /*
   This stops the debug printf statement when not defiend
 */
-#define DEBUG_OUTPUT
+// #define DEBUG_OUTPUT
 /*
 
 When the wifi is on the display must be off as
@@ -34,7 +34,7 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 1          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
 
 // #define MINUTES
 
@@ -42,10 +42,10 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
   all variables declared as RTC_DATA_ATTR are restored after waking up.
 */
 RTC_DATA_ATTR uint8_t percent = 0;
-RTC_DATA_ATTR bool motorON = false;              // control the pump motor
-RTC_DATA_ATTR int counter = 0;                   // counter on how many tiems the chip went to sleep
-RTC_DATA_ATTR bool pumpOn = false;               // togle for ON OFF for pump
-RTC_DATA_ATTR float voltsSensorVal = 0;          // value use whne redign sensor voltage
+RTC_DATA_ATTR bool motorON = false;     // control the pump motor
+RTC_DATA_ATTR int counter = 0;          // counter on how many tiems the chip went to sleep
+RTC_DATA_ATTR bool pumpOn = false;      // togle for ON OFF for pump
+RTC_DATA_ATTR float voltsSensorVal = 0; // value use whne redign sensor voltage
 RTC_DATA_ATTR float last_voltsSensorVal = 0;
 
 const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (MySensor)
@@ -69,12 +69,11 @@ Wifi_Google wifi_Google(ssid, password, serverName);
 
 MySensor mySensor(&ADC_PIN, &SENSOR_PIN, &ADC_ITER);
 #ifndef WIFI_OUTPUT
-const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
-RTC_DATA_ATTR bool displayON = true;             // control the display ON and OFF
-RTC_DATA_ATTR bool OLEDPin_state_changed = true; // if the switch is pressed to turn display ON and OFF, this is set to True
+const uint8_t OLED_PIN = 2;                       // pin that controls the VCC of the OLED module
+RTC_DATA_ATTR bool displayON = true;              // control the display ON and OFF
+RTC_DATA_ATTR bool OLEDPin_state_changed = false; // if the switch is pressed to turn display ON and OFF, this is set to True
 OLED OLED_Display(&OLED_PIN);
 #endif
-
 
 PumpControl pumpControl(&PUMP_PIN_MOSFET, &motorON, &pumpOn, &pumpPWMValue, &lowPercentThreshold, &highPercentThreshold);
 
@@ -91,7 +90,7 @@ void settingDeepSleep()
   esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKEUP_PIN, 1);
 }
 
-#ifdef DEBUG_OUTPUT
+
 
 void checkWakeupReason()
 {
@@ -115,7 +114,7 @@ void checkWakeupReason()
     break;
   }
 }
-#endif
+
 
 void ReadSensor_SetPump()
 {
@@ -166,9 +165,9 @@ void setup()
   digitalWrite(SENSOR_PIN, LOW);
   analogSetAttenuation(ADC_11db); // full 0–3.3 V range
 
-#ifdef DEBUG_OUTPUT
+
   checkWakeupReason();
-#endif
+
 
   ReadSensor_SetPump();
 
@@ -187,26 +186,28 @@ void setup()
       OLED_Display.initialiseOLED();
       OLED_Display.setStartDisplay();
       OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
+      
     }
   }
   else
   {
-    int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
+    int state = OLED_Display.setOLED_PIN_GPIO(HIGH);
     if (state == HIGH)
     {
       OLED_Display.initialiseOLED();
       OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
     }
   }
-  int state = OLED_Display.set_RTC_OLED(displayON);
+
+   int state = OLED_Display.set_RTC_OLED(displayON);
 #endif
 
   if (!pumpOn)
   {
-    counter++;
-#ifdef DEBUG_OUTPUT
+     counter++;
+    // #ifdef DEBUG_OUTPUT
     printf("Going to sleep SETUP \n\n");
-#endif
+    // #endif
     settingDeepSleep();
     esp_deep_sleep_start();
   }
@@ -221,8 +222,6 @@ void loop()
   int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
   if (state == HIGH && displayON)
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
-// #else
-// wifi_Google.sendToGoogleSheet();
 #endif
 
   if (!pumpOn)

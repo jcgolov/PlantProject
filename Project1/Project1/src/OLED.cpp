@@ -71,7 +71,7 @@ void OLED::setStartDisplay()
 
 void OLED::display(float *voltsSensorVal, int *counter, uint8_t *moisturePercent, bool *pumpON)
 {
-    printf(">>> Updating OLED \n");
+    // printf(">>> Updating OLED \n");
     myDisplay.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
     myDisplay.clearDisplay(); // Clear display buffer
     myDisplay.setTextSize(1);
