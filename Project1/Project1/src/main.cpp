@@ -55,7 +55,7 @@ there is not enough space for the entire code
 for both display and wifi
 */
 
-#define WIFI_OUTPUT
+// #define WIFI_OUTPUT
 
 #ifdef WIFI_OUTPUT
 // Replace with your SSID and Password
@@ -130,21 +130,20 @@ void setup()
 {
   printf(">>> Setup-> Counter: %d\n", counter);
 
-#ifdef WIFI_OUTPUT
-  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
-  wifi_Google.initWifi();
-#endif
-
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
   pinMode(SENSOR_PIN, OUTPUT);
   digitalWrite(SENSOR_PIN, LOW);
   analogSetAttenuation(ADC_11db); // full 0–3.3 V range
 
-#ifndef WIFI_OUTPUT
-  WiFi.mode(WIFI_OFF);
-#endif
-
   checkWakeupReason();
+
+#ifdef WIFI_OUTPUT
+  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
+  wifi_Google.initWifi();
+#else
+  WiFi.mode(WIFI_OFF);
+
+#endif 
 
   if (!OLEDPin_state_changed)
   {
@@ -210,7 +209,7 @@ void loop()
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
 #else
     printf("line: 266 \n");
-    wifi_Google.sendToGoogleSheet(); 
+    wifi_Google.sendToGoogleSheet();
 #endif
   }
   if (!pumpOn)
