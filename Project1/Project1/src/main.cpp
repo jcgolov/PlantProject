@@ -31,7 +31,7 @@ When the wifi is on the display must be off as
 there is not enough space for the entire code
 for both display and wifi
 */
-// #define WIFI_OUTPUT
+#define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t OLED_PIN = 2;         // pin that controls the VCC of the OLED module
