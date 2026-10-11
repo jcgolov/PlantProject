@@ -137,13 +137,64 @@ void setup()
 
   checkWakeupReason();
 
+  ReadSensor_SetPump();
+
+#ifdef WIFI_OUTPUT
+  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
+  wifi_Google.initWifi();
+  wifi_Google.sendToGoogleSheet();
+#else
+  WiFi.mode(WIFI_OFF);
+  if (OLEDPin_state_changed)
+  {
+    int state = OLED_Display.setOLED_PIN_GPIO(HIGH);
+    if (state == HIGH && displayON)
+    {
+      OLED_Display.initialiseOLED();
+      OLED_Display.setStartDisplay();
+      OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
+    }
+  }
+  else
+  {
+    int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
+    if (state == HIGH)
+    {
+      OLED_Display.initialiseOLED();
+      OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
+    }
+  }
+  int state = OLED_Display.set_RTC_OLED(displayON);
+#endif
+
+  if (!pumpOn)
+  {
+    counter++;
+    printf("Going to sleep SETUP \n\n");
+    settingDeepSleep();
+    esp_deep_sleep_start();
+  }
+}
+
+/*
+void setup()
+{
+  printf(">>> Setup-> Counter: %d\n", counter);
+
+  pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
+  pinMode(SENSOR_PIN, OUTPUT);
+  digitalWrite(SENSOR_PIN, LOW);
+  analogSetAttenuation(ADC_11db); // full 0–3.3 V range
+
+  checkWakeupReason();
+
 #ifdef WIFI_OUTPUT
   wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
   wifi_Google.initWifi();
 #else
   WiFi.mode(WIFI_OFF);
 
-#endif 
+#endif
 
   if (!OLEDPin_state_changed)
   {
@@ -197,7 +248,7 @@ void setup()
     esp_deep_sleep_start();
   }
 }
-
+*/
 void loop()
 {
   printf(">>> Running Loop \n");
