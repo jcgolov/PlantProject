@@ -37,6 +37,8 @@ RTC_DATA_ATTR int counter = 0;                   // counter on how many tiems th
 RTC_DATA_ATTR bool pumpOn = false;               // togle for ON OFF for pump
 RTC_DATA_ATTR float voltsSensorVal = 0;          // value use whne redign sensor voltage
 
+RTC_DATA_ATTR float last_voltsSensorVal = 0;
+
 const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (MySensor)
 const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MySensor)
 
@@ -115,10 +117,25 @@ void ReadSensor_SetPump()
   mySensor.readPinVoltage(&voltsSensorVal, true);
   printf("--> Setting Sensor LOW <-- \n");
   mySensor.setControlPin(LOW);
-  float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
-  percent = (uint8_t)percent1;
-  printf("percent1: %.3f percent:  %d voltsSensorVal: %.3f\n", percent1, percent, voltsSensorVal);
-  pumpControl.controlPump(&percent);
+
+  float percent1 = 0;
+
+  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.1)
+  {
+    printf("Difference %.3f\n", abs(voltsSensorVal - last_voltsSensorVal));
+
+    percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
+
+    pumpControl.controlPump(&percent1, &percent);
+
+    // percent = (uint8_t)percent1;
+    
+    // pumpControl.controlPump(&percent);
+  }
+
+  printf("percent1: %.3f percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent1, percent, voltsSensorVal, last_voltsSensorVal);
+
+  last_voltsSensorVal = voltsSensorVal;
 
 #ifdef PUMPCONTROL_OFF
   pumpOn = false;
@@ -185,8 +202,8 @@ void loop()
   int state = rtc_gpio_get_level((gpio_num_t)OLED_PIN);
   if (state == HIGH && displayON)
     OLED_Display.display(&voltsSensorVal, &counter, &percent, &pumpOn);
-#else
-  // wifi_Google.sendToGoogleSheet();
+// #else
+// wifi_Google.sendToGoogleSheet();
 #endif
 
   if (!pumpOn)

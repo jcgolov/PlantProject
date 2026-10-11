@@ -17,3 +17,12 @@ float Utils::map_Float(float *x, const float *in_min, const float *in_max, const
 {
   return (*x - *in_min) * (out_max - out_min) / (*in_max - *in_min) + out_min;
 }
+
+float Utils::truncateFloat(float *valuePtr, uint8_t decimals)
+{
+  // Calculate the multiplier (10^decimalPlaces)
+  double multiplier = std::pow(10, decimals);
+  // Truncate and divide back
+  double truncated = std::trunc(*valuePtr * multiplier) / multiplier;
+  return truncated;
+}

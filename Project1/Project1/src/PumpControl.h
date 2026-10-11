@@ -25,6 +25,8 @@ public:
 
     void controlPump(uint8_t *percent);
 
+    void controlPump(float *percentFloat, uint8_t *percent);
+
 private:
     const uint8_t *pump_pin_Mosfet;
     bool *motorON;

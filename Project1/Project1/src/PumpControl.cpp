@@ -39,3 +39,35 @@ void PumpControl::controlPump(uint8_t *percent)
         }
     }
 }
+
+void PumpControl::controlPump(float *percentFloat, uint8_t *percent)
+{
+
+    *percent = (uint8_t)*percentFloat;
+
+    printf("percentFloat %.3f percent: %d \n",  *percentFloat, percent);
+
+    if (*percent <= *lowPercentThreshold)
+    {
+        *pumpOn = true;
+        if (!*motorON)
+            ledcWrite(*pump_pin_Mosfet, *pumpPWMValue);
+    }
+    else
+    {
+        if (*pumpOn == true && *percent >= *highPercentThreshold)
+        {
+            *pumpOn = false;
+            ledcWrite(*pump_pin_Mosfet, 0);
+        }
+        else if (*pumpOn == true && *percent < *highPercentThreshold)
+        {
+            *pumpOn = true;
+            if (!*motorON)
+                ledcWrite(*pump_pin_Mosfet, *pumpPWMValue);
+        }
+        else
+        {
+        }
+    }
+}
