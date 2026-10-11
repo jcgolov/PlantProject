@@ -20,14 +20,14 @@
 /*
   This stops the debug printf statement when not defiend
 */
-// #define DEBUG_OUTPUT
+#define DEBUG_OUTPUT
 /*
 
 When the wifi is on the display must be off as
 there is not enough space for the entire code
 for both display and wifi
 */
-#define WIFI_OUTPUT
+// #define WIFI_OUTPUT
 
 const uint8_t WAKEUP_PIN = 33;      // pin that whne going high stops the sleep of the chip as external wakeup
 const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
@@ -36,7 +36,7 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
 #define TIME_TO_SLEEP 1          // Time ESP32 will go to sleep
 
-#define MINUTES
+// #define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
