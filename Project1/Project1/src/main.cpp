@@ -36,7 +36,7 @@ const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. thi
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
 #define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
 
-#define MINUTES
+// #define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -104,7 +104,6 @@ void checkWakeupReason()
 #ifndef WIFI_OUTPUT
     OLEDPin_state_changed = false;
 #endif
-    break;
   case ESP_SLEEP_WAKEUP_EXT0:
 #ifdef DEBUG_OUTPUT
     printf("--> Wakeup caused by external signal using RTC_IO\n");
@@ -169,6 +168,13 @@ void setup()
 #ifdef DEBUG_OUTPUT
   printf(">>> Setup-> Counter: %d\n", counter);
 #endif
+
+/*
+Under load around 80ma whne wifi kicks in 240
+65ms / 69ma at 80mhz. 
+40 wifi does not work
+*/
+  setCpuFrequencyMhz(80); // Set to 80 MHz
 
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);
   pinMode(SENSOR_PIN, OUTPUT);
