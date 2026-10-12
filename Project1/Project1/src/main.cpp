@@ -132,7 +132,7 @@ void ReadSensor_SetPump()
   printf("--> Setting Sensor HIGH <-- \n");
 #endif
   mySensor.setControlPin(HIGH);
-  mySensor.readPinVoltage(&voltsSensorVal, false);
+  mySensor.readPinVoltage(&voltsSensorVal, true);
 #ifdef DEBUG_OUTPUT
   printf("--> Setting Sensor LOW <-- \n");
 #endif
@@ -173,6 +173,7 @@ void setup()
 Under load around 80ma whne wifi kicks in 240
 65ms / 69ma at 80mhz. 
 40 wifi does not work
+Does not make much diffrence whne in deep sleep though
 */
   setCpuFrequencyMhz(80); // Set to 80 MHz
 
