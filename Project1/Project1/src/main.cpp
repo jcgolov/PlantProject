@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
 
+
+
 #include "Utils.h"
 #include "MySensor.h"
 #include "OLED.h"
@@ -34,7 +36,7 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 10          // Time ESP32 will go to sleep
 
 // #define MINUTES
 
@@ -190,7 +192,6 @@ Does not make much diffrence whne in deep sleep though
   wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
   wifi_Google.initWifi();
   wifi_Google.sendToGoogleSheet();
-  digitalWrite(ADC_PIN, LOW);
 #else
   WiFi.mode(WIFI_OFF);
   if (OLEDPin_state_changed)

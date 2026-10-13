@@ -89,6 +89,7 @@ void MySensor::getModeForFloats(float arr[], const uint16_t *size, float *mode, 
 
 void MySensor::readPinVoltage(float *voltsSensorVal, bool sampled = false)
 {
+
     if (sampled)
         readSampledPinVoltage(voltsSensorVal);
     else

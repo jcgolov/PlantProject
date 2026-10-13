@@ -3,6 +3,9 @@
 #include <iostream>
 using namespace std;
 
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
+
 #define ADC_BITS_NUM 4095.0 // 12-bit ADC
 
 class MySensor
