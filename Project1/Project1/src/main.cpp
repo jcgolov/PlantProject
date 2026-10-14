@@ -36,7 +36,7 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 5          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 1          // Time ESP32 will go to sleep
 
 #define MINUTES
 
@@ -154,7 +154,10 @@ void ReadSensor_SetPump()
     float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
     last_voltsSensorVal = voltsSensorVal;
+    counter = 1;
 
+  }else{
+    counter = 0;
   }
 #ifdef DEBUG_OUTPUT
   printf("percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent, voltsSensorVal, last_voltsSensorVal);
@@ -221,7 +224,7 @@ Does not make much diffrence whne in deep sleep though
 
   if (!pumpOn)
   {
-    counter++;
+    // counter++;
     // #ifdef DEBUG_OUTPUT
     printf("Going to sleep SETUP \n\n");
     // #endif
