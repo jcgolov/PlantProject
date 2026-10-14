@@ -13,6 +13,14 @@ int currCount = 1;
 //   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 // }
 
+/*
+out_range = =out_max-out_min
+in_range = =in_max-in_min
+range_coef = =out_range/in_range
+x = (percent-out_min)/range_coef + in_min
+
+*/
+
 float Utils::map_Float(float *x, const float *in_min, const float *in_max, const float out_min, const float out_max)
 {
   return (*x - *in_min) * (out_max - out_min) / (*in_max - *in_min) + out_min;

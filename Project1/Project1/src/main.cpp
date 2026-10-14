@@ -36,7 +36,7 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 15          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 5          // Time ESP32 will go to sleep
 
 #define MINUTES
 
@@ -127,6 +127,7 @@ void checkWakeupReason()
   }
 }
 
+
 void ReadSensor_SetPump()
 {
 
@@ -148,17 +149,18 @@ void ReadSensor_SetPump()
     byt only doing things whne really needed
   */
 
-  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.1)
+  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.033)
   {
     float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
+    last_voltsSensorVal = voltsSensorVal;
+
   }
 #ifdef DEBUG_OUTPUT
   printf("percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent, voltsSensorVal, last_voltsSensorVal);
 #endif
 
-  last_voltsSensorVal = voltsSensorVal;
-
+  
 #ifdef PUMPCONTROL_OFF
   pumpOn = false;
   printf("********* Pump turned off for testing ****************\n");
