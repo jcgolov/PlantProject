@@ -15,7 +15,7 @@
   This overrides the pump On and OFF to set it to OFF
   all the time. This is for testing the code
 */
-#define PUMPCONTROL_OFF
+// #define PUMPCONTROL_OFF
 
 /*
   This stops the debug printf statement when not defiend
@@ -131,6 +131,13 @@ void checkWakeupReason()
 
 void ReadSensor_SetPump()
 {
+
+  /*
+  I haver dried the earth in pot in over
+  pretty dry to teh touch and it is very dried
+  with current voltage computation i get 2.162 volts
+  this set the percent to 24%
+  */
 
 #ifdef DEBUG_OUTPUT
   printf("--> Setting Sensor HIGH <-- \n");
