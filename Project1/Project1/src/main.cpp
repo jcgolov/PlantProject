@@ -5,8 +5,6 @@
 #include <Arduino.h>
 #include "esp_sleep.h" //for sleep
 
-
-
 #include "Utils.h"
 #include "MySensor.h"
 #include "OLED.h"
@@ -17,7 +15,7 @@
   This overrides the pump On and OFF to set it to OFF
   all the time. This is for testing the code
 */
-// #define PUMPCONTROL_OFF
+#define PUMPCONTROL_OFF
 
 /*
   This stops the debug printf statement when not defiend
@@ -36,9 +34,9 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 1          // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 30           // Time ESP32 will go to sleep
 
-#define MINUTES
+// #define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -54,11 +52,15 @@ const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (M
 const uint16_t ADC_ITER = 10; // number of times the pin reading is sampled (MySensor)
 
 // pump control values passed as pointers to PumpControl
-const uint8_t lowPercentThreshold = 30;  // if the percent lower than that, pump is turned ON
-const uint8_t highPercentThreshold = 40; // When motor pump is ON, it will stop whne percent >= this value
+const uint8_t lowPercentThreshold = 40;  // if the percent lower than that, pump is turned ON
+const uint8_t highPercentThreshold = 70; // When motor pump is ON, it will stop whne percent >= this value
 const uint8_t pumpPWMValue = 255;        // this sets the speed of the pump motor
+
+
 // // used to map the values for percents
-const float dryValue = 2.58; // volts
+const float dryValue = 2.58; // volts -> dry whne out of the pot
+// const float dryValue = 1.695; //volts -> dry pot earth touch
+
 const float wetValue = 0.94; // volts
 
 #ifdef WIFI_OUTPUT
@@ -127,7 +129,6 @@ void checkWakeupReason()
   }
 }
 
-
 void ReadSensor_SetPump()
 {
 
@@ -149,21 +150,33 @@ void ReadSensor_SetPump()
     byt only doing things whne really needed
   */
 
-  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.033)
+  /*
+  we dont want that if the pump is running
+  the step between whole percent appears to be 0.016 volt (58 raw values)
+  Whne heater is on this value shift greatly so instead of > 0.016 we use twice that amount
+  for more stability i.e. 0.033
+  */
+  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.033 && !motorON)
   {
     float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
     last_voltsSensorVal = voltsSensorVal;
     counter = 1;
-
-  }else{
+  }
+  else if (pumpOn)
+  {
+    float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
+    pumpControl.controlPump(&percent1, &percent);
+    counter = 2;
+  }
+  else
+  {
     counter = 0;
   }
 #ifdef DEBUG_OUTPUT
   printf("percent:  %d voltsSensorVal: %.3f last_voltsSensorVal: %.3f\n", percent, voltsSensorVal, last_voltsSensorVal);
 #endif
 
-  
 #ifdef PUMPCONTROL_OFF
   pumpOn = false;
   printf("********* Pump turned off for testing ****************\n");
@@ -176,12 +189,12 @@ void setup()
   printf(">>> Setup-> Counter: %d\n", counter);
 #endif
 
-/*
-Under load around 80ma whne wifi kicks in 240
-65ms / 69ma at 80mhz. 
-40 wifi does not work
-Does not make much diffrence whne in deep sleep though
-*/
+  /*
+  Under load around 80ma whne wifi kicks in 240
+  65ms / 69ma at 80mhz.
+  40 wifi does not work
+  Does not make much diffrence whne in deep sleep though
+  */
   setCpuFrequencyMhz(80); // Set to 80 MHz
 
   pinMode(WAKEUP_PIN, INPUT_PULLDOWN);

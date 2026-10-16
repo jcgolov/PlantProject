@@ -111,6 +111,9 @@ void MySensor::readSampledPinVoltage(float *voltsSensorVal)
     for (int idx = 0; idx < *ADC_Iter; idx++)
     {
         uint32_t currValRead = analogReadMilliVolts(*ADC_Pin);
+
+        // printf("currValRead: %.3f\n", currValRead);
+
         *voltsSensorVal = (currValRead / 1000.0) - 0.042;
         _arrayVolts[idx] = *voltsSensorVal;
     }
