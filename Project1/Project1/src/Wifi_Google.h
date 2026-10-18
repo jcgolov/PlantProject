@@ -15,7 +15,7 @@ class Wifi_Google
 public:
     Wifi_Google(const char *ssid, const char *password, const char *serverName);
 
-    void setVariablesPrt(float* voltsSensorVal, uint8_t* percent, int* counter, bool* pumpOn);
+    void setVariablesPrt(float* voltsSensorVal, uint8_t* percent, int* counter, bool* pumpOn, bool* motorON, float* diff);
 
     void initWifi();
     void sendToGoogleSheet();
@@ -31,4 +31,9 @@ private:
     uint8_t* percent = nullptr;
     int* counter = nullptr;
     bool* pumpOn = nullptr;
+
+    bool* motorON = nullptr;
+    float* diff = nullptr;
+
+
 };

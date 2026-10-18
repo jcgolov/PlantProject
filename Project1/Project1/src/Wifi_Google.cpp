@@ -8,14 +8,19 @@ Wifi_Google::Wifi_Google(const char *ssid, const char *password, const char *ser
     this->password = password;
     this->serverName = serverName;
     this->timeRead = 0;
+
 }
 
-void Wifi_Google::setVariablesPrt(float *voltsSensorVal, uint8_t *percent, int *counter, bool *pumpOn)
+void Wifi_Google::setVariablesPrt(float *voltsSensorVal, uint8_t *percent, int *counter, bool *pumpOn, bool* motorON, float* diff)
 {
     this->voltsSensorVal = voltsSensorVal;
     this->percent = percent;
     this->counter = counter;
     this->pumpOn = pumpOn;
+    this->motorON = motorON;
+    this->diff = diff;
+
+    printf("_________________\n");
 }
 
 void Wifi_Google::initWifi()
@@ -27,6 +32,8 @@ void Wifi_Google::initWifi()
     }
     WiFi.begin(ssid, password);
     int status = WiFi.waitForConnectResult(10000);
+
+    printf("=======> status %d\n", status);
 
 #ifdef DEBUG_WIFI_GOOGLE
 
@@ -43,6 +50,15 @@ void Wifi_Google::initWifi()
 #endif
 }
 
+/*
+function doPost(e) {
+var sheet =
+SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+var data = JSON.parse(e.postData.contents);
+sheet.appendRow([new Date(), data.volt, data.moist, data.count, data.pumpON,  data.motorON, data.diff]);
+}
+*/
+
 void Wifi_Google::sendToGoogleSheet()
 {
     if (serverName == nullptr)
@@ -57,8 +73,15 @@ void Wifi_Google::sendToGoogleSheet()
         http.begin(serverName);
         http.addHeader("Content-Type", "application/json");
 
-        String jsonData = "{\"volt\":\"" + String(*voltsSensorVal, 3) + "\", \"moist\":\"" + String(*percent) + "\", \"count\":\"" + String(*counter) + "\", \"pumpON\":\"" + String(*pumpOn) + "\"}";
+        printf("*diff: %.3f\n", *diff);
+
+        String jsonData = "{\"volt\":\""+String(*voltsSensorVal, 3)+"\",\"moist\":\""+String(*percent)+"\",\"count\":\""+String(*counter) +"\",\"pumpON\":\""+String(*pumpOn) + "\", \"motorON\":\"" + String(*motorON)  + "\",  \"diff\":\"" + String(*diff,3) +"\"}";
+
+        // String jsonData = "{\"volt\":\"" + String(*voltsSensorVal, 3) + "\", \"moist\":\"" + String(*percent) + "\", \"count\":\"" + String(*counter) + "\", \"pumpON\":\"" + String(*pumpOn) + "\", \"motorON\":\"" + String(*motorON)+ "\",  \"diff\":\"" + String(*diff) + "\"}";
         int httpResponseCode = http.POST(jsonData);
+
+        printf("httpResponseCode: %d\n", httpResponseCode);
+
         http.end();
 
 #ifdef DEBUG_WIFI_GOOGLE

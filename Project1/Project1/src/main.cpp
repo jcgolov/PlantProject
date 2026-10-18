@@ -15,7 +15,7 @@
   This overrides the pump On and OFF to set it to OFF
   all the time. This is for testing the code
 */
-// #define PUMPCONTROL_OFF
+#define PUMPCONTROL_OFF
 
 /*
   This stops the debug printf statement when not defiend
@@ -34,9 +34,9 @@ const uint8_t SENSOR_PIN = 4;       // pin that controls the VCC of the sensor
 const uint8_t PUMP_PIN_MOSFET = 25; // GPIO driving the XY-MOS TRIG/PWM pin. this control the pump motor
 
 #define uS_TO_S_FACTOR 1000000ULL // Conversion factor for microseconds to seconds
-#define TIME_TO_SLEEP 30           // Time ESP32 will go to sleep
+#define TIME_TO_SLEEP 1           // Time ESP32 will go to sleep
 
-// #define MINUTES
+#define MINUTES
 
 /*
   all variables declared as RTC_DATA_ATTR are restored after waking up.
@@ -46,6 +46,7 @@ RTC_DATA_ATTR bool motorON = false;     // control the pump motor
 RTC_DATA_ATTR int counter = 0;          // counter on how many tiems the chip went to sleep
 RTC_DATA_ATTR bool pumpOn = false;      // togle for ON OFF for pump
 RTC_DATA_ATTR float voltsSensorVal = 0; // value use whne redign sensor voltage
+RTC_DATA_ATTR float diff = 0;
 RTC_DATA_ATTR float last_voltsSensorVal = 0;
 
 const uint8_t ADC_PIN = 34;   // GPIO34 that control the VCC power ON and OFF (MySensor)
@@ -66,7 +67,12 @@ const float wetValue = 0.94; // volts
 #ifdef WIFI_OUTPUT
 const char *ssid = "BT-9TAJSN";
 const char *password = "NEtLgxRuhDGh6V";
-const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
+//version 1
+// const char *serverName = "https://script.google.com/macros/s/AKfycbz5co3hnWUnCaz06d4znbZ7AuWzXQa9EL0iNopfrWJyXyOyNjGQtMqCphzPT5yyssGH/exec";
+//version 2
+const char *serverName = "https://script.google.com/macros/s/AKfycbz6wbRR8zWzStHGiYPJNdZ_yeWdLWHLeLSr8swFM1R194eMy41jaMWC3ETSj89oK0kTRw/exec";
+
+
 unsigned long timeRead = 0;
 Wifi_Google wifi_Google(ssid, password, serverName);
 #endif
@@ -163,7 +169,11 @@ void ReadSensor_SetPump()
   Whne heater is on this value shift greatly so instead of > 0.016 we use twice that amount
   for more stability i.e. 0.033
   */
-  if (abs(voltsSensorVal - last_voltsSensorVal) > 0.033 && !motorON)
+
+  diff = abs(voltsSensorVal - last_voltsSensorVal);
+
+  printf("diff: %.3f\n", diff);
+  if (diff > 0.033 && !motorON)
   {
     float percent1 = Utils::map_Float(&voltsSensorVal, &wetValue, &dryValue, 100.0, 0.0);
     pumpControl.controlPump(&percent1, &percent);
@@ -214,7 +224,8 @@ void setup()
   ReadSensor_SetPump();
 
 #ifdef WIFI_OUTPUT
-  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn);
+printf("________1_________\n");
+  wifi_Google.setVariablesPrt(&voltsSensorVal, &percent, &counter, &pumpOn, &motorON, &diff);
   wifi_Google.initWifi();
   wifi_Google.sendToGoogleSheet();
 #else
@@ -273,6 +284,33 @@ void loop()
     esp_deep_sleep_start();
   }
 }
+
+
+/*
+VERSION 2
+
+
+function doPost(e) {
+var sheet =
+SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+var data = JSON.parse(e.postData.contents);
+sheet.appendRow([new Date(), data.volt, data.moist, data.count, data.pumpON,  data.motorON, data.diff]);
+}
+
+Version 1 on 18 Oct 2026, 17:37
+Deployment ID
+AKfycbwVxhIuBpaJQz1PR-fmcEH3rS0bIvGtKQL9Hi5dBCSDoHlIGvnl9EPJRchOgZVrBSDFgw
+
+Web app
+
+scripts: https://script.google.com/macros/s/AKfycbwVxhIuBpaJQz1PR-fmcEH3rS0bIvGtKQL9Hi5dBCSDoHlIGvnl9EPJRchOgZVrBSDFgw
+URL
+https://script.google.com/macros/s/AKfycbwVxhIuBpaJQz1PR-fmcEH3rS0bIvGtKQL9Hi5dBCSDoHlIGvnl9EPJRchOgZVrBSDFgw/exec
+
+https://script.google.com/home
+
+
+*/
 
 /*
 function doPost(e) {
